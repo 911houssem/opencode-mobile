@@ -21,28 +21,24 @@ export default function SetupScreen() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const testConnection = async () => {
-    if (!url.trim()) {
-      Alert.alert("Error", "Enter the server URL")
-      return
-    }
+  const connectTo = async (targetUrl: string) => {
     setLoading(true)
     try {
-      const baseUrl = url.trim().replace(/\/+$/, "")
+      const baseUrl = targetUrl.trim().replace(/\/+$/, "")
       await connect({
         baseUrl,
         username: username.trim() || undefined,
         password: password.trim() || undefined,
       })
+      setUrl(targetUrl.trim().replace(/\/+$/, ""))
     } catch (e: any) {
-      Alert.alert(
-        "Connection failed",
-        e?.message ?? "Could not reach server"
-      )
+      Alert.alert("Connection failed", e?.message ?? "Could not reach server")
     } finally {
       setLoading(false)
     }
   }
+
+  const testConnection = () => connectTo(url)
 
   return (
     <KeyboardAvoidingView
@@ -69,6 +65,16 @@ export default function SetupScreen() {
           autoCorrect={false}
           keyboardType="url"
         />
+
+        <View style={styles.presets}>
+          <TouchableOpacity
+            style={styles.presetChip}
+            onPress={() => connectTo("http://localhost:4096")}
+            disabled={loading}
+          >
+            <Text style={styles.presetText}>On this device (Termux)</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.label}>Username (optional)</Text>
         <TextInput
@@ -150,6 +156,16 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 16,
   },
+  presets: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
+  presetChip: {
+    backgroundColor: Colors.surface2,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  presetText: { color: Colors.accent, fontSize: 13, fontWeight: "600" },
   button: {
     backgroundColor: Colors.accent,
     borderRadius: 10,

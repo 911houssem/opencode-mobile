@@ -31,6 +31,46 @@ bun run opencode serve --port 4096
 
 > ملاحظة: جرّب فتح العنوان من متصفح على الهاتف للتأكد أن الشبكة تصل إلى الخادم.
 
+## 2) التشغيل الكامل على الهاتف (Termux)
+
+بدون كمبيوتر — الخادم والتطبيق يعملان على هاتفك نفسه عبر **Termux** (يتطلب هواتف aarch64 وتثبيت Termux من **F-Droid** وليس من متجر Play).
+
+1. تثبيت Termux من F-Droid ثم فتحه وتحديثه:
+   ```bash
+   pkg update -y && pkg upgrade -y
+   ```
+2. تفعيل الوصول للتخزين (اختياري، للمشاريع خارج بيئة Termux):
+   ```bash
+   termux-setup-storage
+   ```
+3. نسخ التطبيق وتجهيز كل شيء (يثبّت Node.js و OpenCode natively لـ Termux):
+   ```bash
+   git clone https://github.com/911houssem/opencode-mobile.git
+   cd opencode-mobile
+   bash termux/install.sh
+   ```
+4. إعداد مفاتيح مزوّد الذكاء الاصطناعي — أنشئ ملف `~/.config/opencode/opencode.json` أو عرّف متغيرات بيئة مثل:
+   ```bash
+   export ANTHROPIC_API_KEY=sk-ant-...
+   # أو OPENAI_API_KEY / GEMINI_API_KEY ...
+   ```
+5. افتح **نافذة Termux جديدة** (سحب من اليسار → New session) للخادم:
+   ```bash
+   cd ~/opencode-mobile && bash termux/server.sh
+   ```
+   سيبدأ الخادم على `http://localhost:4096`.
+6. افتح **نافذة Termux جديدة** للتطبيق:
+   ```bash
+   cd ~/opencode-mobile && bash termux/app.sh
+   ```
+7. ثبّت تطبيق **Expo Go** من المتجر، افتحه، واكتب:
+   ```
+   exp://127.0.0.1:8081
+   ```
+8. داخل التطبيق في شاشة الإعداد اضغط زر **"On this device (Termux)"** وسيتصل تلقائيًا بـ `http://localhost:4096`.
+
+> لإبقاء العمليتين تعملان عند إغلاق الشاشة استخدم `tmux`/`screen` أو `termux-wake-lock` عند الحاجة.
+
 ## 2) تشغيل التطبيق
 
 من مجلد `opencode-mobile`:
@@ -76,4 +116,5 @@ src/
   store/      حالة التطبيق (الإعدادات، الجلسات)
   screens/    شاشات الإعداد، قائمة الجلسات، المحادثة
   theme.ts    الألوان
+termux/       سكربتات التشغيل المحلي على الهاتف (تثبيت + خادم + تطبيق)
 ```
