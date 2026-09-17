@@ -1,0 +1,16 @@
+export const Colors = {
+  bg: "#0d1117",
+  surface: "#161b22",
+  surface2: "#1c2128",
+  border: "#30363d",
+  text: "#e6edf3",
+  textDim: "#8b949e",
+  accent: "#58a6ff",
+  green: "#3fb950",
+  yellow: "#d29922",
+  red: "#f85149",
+  inputBg: "#0d1117",
+  codeBg: "#161b22",
+  danger: "#da3633",
+  overlay: "rgba(0,0,0,0.55)",
+} as const
