@@ -1,29 +1,40 @@
 import React, { useState, useEffect, useCallback } from "react"
+import { View, ActivityIndicator } from "react-native"
 import { StatusBar } from "expo-status-bar"
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import { AppProvider, useApp } from "./src/store/AppContext"
 import SetupScreen from "./src/screens/SetupScreen"
 import SessionsScreen from "./src/screens/SessionsScreen"
 import ChatScreen from "./src/screens/ChatScreen"
+import DirectChatScreen from "./src/screens/DirectChatScreen"
+import { Colors } from "./src/theme"
 
 type Screen =
   | { name: "setup" }
   | { name: "sessions" }
   | { name: "chat"; sessionID: string }
 
+function Loading() {
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.bg }}>
+      <ActivityIndicator color={Colors.accent} size="large" />
+    </View>
+  )
+}
+
 function Navigator() {
-  const { connected } = useApp()
+  const { mode, connected, discovering, resetAll } = useApp()
   const [screen, setScreen] = useState<Screen>({ name: "sessions" })
 
   useEffect(() => {
-    if (!connected) {
+    if (mode !== "server" || !connected) {
       setScreen({ name: "setup" })
       return
     }
     setScreen((prev) =>
       prev.name === "setup" ? { name: "sessions" } : prev
     )
-  }, [connected])
+  }, [mode, connected])
 
   const openSession = useCallback((sessionID: string) => {
     setScreen({ name: "chat", sessionID })
@@ -33,7 +44,20 @@ function Navigator() {
     setScreen({ name: "sessions" })
   }, [])
 
-  if (!connected) return <SetupScreen />
+  if (discovering) return <Loading />
+
+  // Direct AI mode → straight to chat
+  if (mode === "direct") {
+    return (
+      <DirectChatScreen
+        onExit={() => resetAll()}
+      />
+    )
+  }
+
+  if (mode !== "server" || !connected) {
+    return <SetupScreen />
+  }
 
   switch (screen.name) {
     case "chat":
