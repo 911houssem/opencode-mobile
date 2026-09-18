@@ -32,6 +32,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "361c6f2c-9230-4dfa-8e21-38088cda5ad8"
+      }
+    },
+    "owner": "911houssem"
   }
 }
