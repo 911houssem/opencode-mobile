@@ -15,7 +15,7 @@ import { Colors } from "../theme"
 import { useApp } from "../store/AppContext"
 
 export default function SetupScreen() {
-  const { connect } = useApp()
+  const { connect, discoverAndConnect, discovering } = useApp()
   const [url, setUrl] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -53,6 +53,31 @@ export default function SetupScreen() {
         <Text style={styles.subtitle}>
           Connect to your OpenCode server
         </Text>
+
+        {discovering && (
+          <View style={styles.searchingBox}>
+            <ActivityIndicator color={Colors.accent} />
+            <Text style={styles.searchingText}>
+              Searching for a server automatically...
+            </Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={[styles.searchBtn, (loading || discovering) && styles.buttonDisabled]}
+          onPress={() => discoverAndConnect()}
+          disabled={loading || discovering}
+        >
+          <Text style={styles.searchBtnText}>
+            {discovering ? "Searching..." : "Search for server (automatic)"}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or enter manually</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
         <Text style={styles.label}>Server URL</Text>
         <TextInput
@@ -112,11 +137,13 @@ export default function SetupScreen() {
         </TouchableOpacity>
 
         <View style={styles.tipBox}>
-          <Text style={styles.tipTitle}>Server Setup</Text>
+          <Text style={styles.tipTitle}>How it works (auto-connect)</Text>
           <Text style={styles.tipText}>
-            Start your OpenCode server with:{'\n'}
-            <Text style={styles.code}>bun run opencode serve</Text>
-            {'\n\n'}Make sure your phone and computer are on the same WiFi network.
+            The app finds your server automatically — no link needed in most cases:
+            {'\n'}• Server on this phone (Termux): found instantly.
+            {'\n'}• Server on your PC on the same WiFi: run{'\n'}
+            <Text style={styles.code}>opencode serve --port 4096 --mdns</Text>
+            {'\n'}{'\n'}Only if nothing is found, enter the address manually (or tap "On this device (Termux)").
           </Text>
         </View>
       </ScrollView>
@@ -175,6 +202,29 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  searchingBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: Colors.surface2,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
+  },
+  searchingText: { color: Colors.text, fontSize: 14 },
+  searchBtn: {
+    backgroundColor: Colors.surface2,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  searchBtnText: { color: Colors.accent, fontSize: 15, fontWeight: "600" },
+  divider: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  dividerText: { color: Colors.textDim, fontSize: 12 },
   tipBox: {
     backgroundColor: Colors.surface,
     borderRadius: 10,

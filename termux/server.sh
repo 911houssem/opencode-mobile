@@ -10,4 +10,5 @@ mkdir -p "$HOME/workspace"
 cd "$HOME/workspace"
 
 echo "==> Starting OpenCode server on http://localhost:4096"
-exec opencode serve --port 4096 --hostname 127.0.0.1
+# --mdns also advertises opencode.local so other devices can auto-connect
+exec opencode serve --port 4096 --mdns

@@ -90,8 +90,17 @@ export class OpenCodeClient {
     return "?" + entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join("&")
   }
 
-  async health(): Promise<void> {
-    await this.request("/health")
+  async health(timeoutMs = 8000): Promise<void> {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      await this.request("/health", { signal: controller.signal })
+    } catch (e: any) {
+      if (e?.name === "AbortError") throw new Error("Server unreachable")
+      throw e
+    } finally {
+      clearTimeout(timer)
+    }
   }
 
   async listSessions(opts?: {

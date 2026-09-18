@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { OpenCodeClient, ServerConfig } from "../api/client"
 import { connectEvents, disconnectEvents, eventBus } from "../api/events"
 import { SessionInfo, ServerEvent, AgentInfo, ModelInfo } from "../api/types"
+import { discoverServer } from "../api/discover"
 
 const CONFIG_KEY = "oc_config"
 
@@ -17,6 +18,8 @@ interface AppState {
   config: ServerConfig | null
   client: OpenCodeClient | null
   connected: boolean
+  discovering: boolean
+  discoverAndConnect: () => Promise<boolean>
   sessions: SessionInfo[]
   loadingSessions: boolean
   loadSessions: () => Promise<void>
@@ -33,6 +36,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<ServerConfig | null>(null)
   const [client, setClient] = useState<OpenCodeClient | null>(null)
   const [connected, setConnected] = useState(false)
+  const [discovering, setDiscovering] = useState(false)
   const [sessions, setSessions] = useState<SessionInfo[]>([])
   const [loadingSessions, setLoadingSessions] = useState(false)
   const [agents, setAgents] = useState<AgentInfo[]>([])
@@ -67,18 +71,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    AsyncStorage.getItem(CONFIG_KEY).then((raw) => {
-      if (!raw) return
-      try {
-        const cfg: ServerConfig = JSON.parse(raw)
-        connect(cfg)
-      } catch {
-        // ignore
-      }
-    })
-  }, [])
-
-  useEffect(() => {
     if (!client) return
     connectEvents(client)
     loadSessions()
@@ -108,6 +100,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setConnected(true)
   }, [])
 
+  const discoverAndConnect = useCallback(async () => {
+    setDiscovering(true)
+    try {
+      const cfg = await discoverServer()
+      if (cfg) {
+        await connect(cfg)
+        return true
+      }
+      return false
+    } finally {
+      setDiscovering(false)
+    }
+  }, [connect])
+
+  useEffect(() => {
+    ;(async () => {
+      const raw = await AsyncStorage.getItem(CONFIG_KEY)
+      if (raw) {
+        try {
+          const cfg: ServerConfig = JSON.parse(raw)
+          await connect(cfg)
+          return
+        } catch {
+          // corrupted config; fall through to discovery
+        }
+      }
+      await discoverAndConnect()
+    })()
+  }, [])
+
   const disconnect = useCallback(() => {
     disconnectEvents()
     AsyncStorage.removeItem(CONFIG_KEY)
@@ -125,6 +147,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         config,
         client,
         connected,
+        discovering,
+        discoverAndConnect,
         sessions,
         loadingSessions,
         loadSessions,
